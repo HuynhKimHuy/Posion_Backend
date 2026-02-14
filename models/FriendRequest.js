@@ -1,25 +1,40 @@
 import mongoose from "mongoose";
 
 const friendRequestSchema = new mongoose.Schema({
-    from:{
+    from: {
         type: mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        required:true
+        ref: "User",
+        required: true
     },
-    to:{
+    to: {
         type: mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        required:true
+        ref: "User",
+        required: true
     },
-    message:{
+    message: {
         type: String,
-        required:true,
-        maxlength:200
+        required: true,
+        maxlength: 200
     }
-},{
-    timestamps:true
+}, {
+    timestamps: true
 })
+
 friendRequestSchema.index(
-  { from: 1, to: 1 },
-  { unique: true }
+    { from: 1, to: 1 },
+    { unique: true }
 );
+friendRequestSchema.index(
+    {
+        from: 1
+    }
+);
+friendRequestSchema.index(
+    {
+        to: 1
+    }
+);
+
+const FriendRequestModel = mongoose.model("FriendRequest", friendRequestSchema)
+
+export default FriendRequestModel
