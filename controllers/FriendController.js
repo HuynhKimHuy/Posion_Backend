@@ -30,9 +30,25 @@ export const accepFriendRequest = async (req, res) => {
     }).send(res)
 };
 export const declineFriendRequest = async (req, res) => {
+    const { requestId } = req.params
+    const userId = req.user?._id;
+    new OK({
+        message: "decline Request completed",
+        statusCode: 200,
+        metadata: await FriendService.declineFriendRequest({
+            requestId,
+            userId
+        })
+    }).send(res)
 
 };
 export const getAllFriends = async (req, res) => {
+    const userId = req.user?._id;
+    new OK({
+        message: "get all friends completed",
+        statusCode: 200,
+        metadata: await FriendService.getAllFriends(userId)
+    }).send(res)
 
 };
 export const getAllFriendRequest = async (req, res) => {

@@ -20,7 +20,7 @@ friendSchema.pre("save",function(next) {
         this.userA = new mongoose.Types.ObjectId(userB)
         this.userB = new mongoose.Types.ObjectId(userA)
     }
-    next()
+
 })
 
 friendSchema.index(

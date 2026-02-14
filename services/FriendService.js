@@ -1,7 +1,7 @@
-import { BadRequestError } from "../core/AppError";
+import { BadRequestError } from "../core/AppError.js";
 import User from "../models/User.js";
 import Friend from '../models/Friend.js'
-import FriendRequestModel from "../models/FriendRequest";
+import FriendRequestModel from "../models/FriendRequest.js";
 class FriendService {
 
   static sendFriendRequest = async (payload) => {
@@ -38,23 +38,58 @@ class FriendService {
     return request;
   };
 
-
   static acceptFriendRequest = async (payload) => {
     const { requestId, userId } = payload
     const request = await FriendRequestModel.findById(requestId)
     if (!request) throw new BadRequestError("Cannot find Request add friend")
 
-    if (request.to.toString() != userId) throw new Error("Không có quyền chấp nhận lời mời kết bạn ");
+    if (request.to.toString() != userId.toString()) throw new Error("Không có quyền chấp nhận lời mời kết bạn ");
 
     const friend = await Friend.create({
       userA: request.from,
       userB: request.to,
     })
 
-  };
-  static declineFriendRquest = async (userId) => {
+    await FriendRequestModel.findByIdAndDelete(requestId)
 
+    const from = await User.findById(request.from).select(" _id userName avatarUrl").lean()
+    return {
+      newFriend: {
+        _id: from._id,
+        userName: from?.userName,
+        avatarUrl: from?.avatarUrl
+    }
+  }
   };
+
+  static declineFriendRequest = async (payload) => {
+    const {requestId,userId} = payload
+    const request = await FriendRequestModel.findById(requestId)
+
+    if (!request) throw new BadRequestError("Cannot find Request add friend")
+
+    if (request.to.toString() != userId) throw new Error("Không có quyền từ chối lời mời kết bạn ");
+    await FriendRequestModel.findByIdAndDelete(requestId)
+  };
+
+  static getAllFriends = async (userId) => {
+    const friends = await Friend.find({
+      $or: [
+        { userA: userId },
+        { userB: userId },
+      ],
+    }).populate("userA userB", "_id userName avatarUrl").lean();
+    if (!friends.length) throw new BadRequestError("Cannot find friends");
+    if (friends.length > 0) {
+      return friends.map(friend => {
+        const friendInfo = friend.userA._id.toString() === userId.toString() ? friend.userB : friend.userA; 
+        return {
+          ...friend,
+          friendInfo
+        }
+      });
+    }
+  }
 }
 
 export default FriendService;
