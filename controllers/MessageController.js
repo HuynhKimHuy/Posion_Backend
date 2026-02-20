@@ -20,4 +20,10 @@ export const sendGroupMessage = async (req, res) => {
         statusCode: 200,
         metadata: await messageService.sendGroupMessage(req.body)
     }).send(res)
+
+
+    new OK({
+
+    }).send(res)
 }
+

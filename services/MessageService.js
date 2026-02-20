@@ -1,5 +1,5 @@
-import {BadGatewayError} from "../core/AppError.js";
-import Message from "../models/Message.js";
+import { BadGatewayError } from "../core/AppError.js";
+import Message from "../models/message.js";
 
 import Conversation from "../models/Conversation.js";
 import updateConverStationAfteCreateMessage from "../helpers/messageHelper.js";
@@ -30,8 +30,8 @@ class messageService {
             content
         })
 
-        if(!message) throw new BadGatewayError("Failed to create message")
-        updateConverStationAfteCreateMessage(conversation,message,senderId)
+        if (!message) throw new BadGatewayError("Failed to create message")
+        updateConverStationAfteCreateMessage(conversation, message, senderId)
         await conversation.save()
         return {
             message
@@ -39,6 +39,7 @@ class messageService {
     }
 
     static async sendGroupMessage(payload) {
+        
     }
 
 }
