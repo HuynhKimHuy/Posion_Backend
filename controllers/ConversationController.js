@@ -1,15 +1,16 @@
 import ConversationService from "../services/ConversationService.js"
-
+import { OK } from "../core/Success.js"
 export const createConversation = async (req, res) => {
     const userId = req.user._id
     new OK({
         message: "Create conversation successfully",
         statusCode: 201,
-        metadata: await ConversationService.createConversation(...req.body,userId)
+        metadata: await ConversationService.createConversation(req.body, userId)
     }).send(res)
-}
+}   
 
 export const getConversations = async (req, res) => {
+    
     new OK({
         message: "Get user conversations successfully",
         statusCode: 200,
