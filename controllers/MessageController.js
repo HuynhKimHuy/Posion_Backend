@@ -19,8 +19,8 @@ export const sendGroupMessage = async (req, res) => {
     const conversation = req.conversation
     const content = req.body.content
     new OK({
-        message: "OK",
-        statusCode: 200,
+        message: "Created group message successfully",
+        statusCode: 201,
         metadata: await messageService.sendGroupMessage(senderId, conversation._id, content)
     }).send(res)
 

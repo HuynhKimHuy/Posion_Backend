@@ -41,13 +41,17 @@ class messageService {
     static async sendGroupMessage(senderId, conversationId, content) {
 
         if (!content) throw new BadGatewayError("Content is required")
+        
+        const conversation = await Conversation.findById(conversationId)
+        if (!conversation) throw new BadGatewayError("Conversation not found")
+        
         const message = await Message.create({
             conversation: conversationId,
             senderId,
             content
         })
-        updateConverStationAfteCreateMessage(conversationId, message, senderId)
-        await Conversation.save()
+        updateConverStationAfteCreateMessage(conversation, message, senderId)
+        await conversation.save()
         return {
             message
         }

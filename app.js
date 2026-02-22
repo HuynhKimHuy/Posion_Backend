@@ -8,7 +8,8 @@ import router from "./routers/index.js";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import cors from 'cors'
-
+import swaggerUi from "swagger-ui-express";
+import fs from "fs";
 config();
 
 Database.getInstance()
@@ -24,9 +25,10 @@ app.use(
     credentials: true
   })
 );
+const swaggerDocument = JSON.parse(fs.readFileSync("./swagger.json", "utf-8"));
 
 
-
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/',router)
 
 
