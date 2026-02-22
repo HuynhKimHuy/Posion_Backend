@@ -1,5 +1,6 @@
 import Conversation from "../models/Conversation.js"
-
+import message from "../models/message.js"
+import { BadRequestError } from "../core/AppError.js"
 class ConversationService {
     static async createConversation(payload, currentUserId) {
         const { type, name, memberId } = payload
@@ -84,7 +85,7 @@ class ConversationService {
                 options: { lean: true }
             })
             .populate({
-                path: "lastMessage.sender",
+                path: "lastMessage.senderId",
                 select: "userName email avatarUrl",
                 options: { lean: true }
             })
@@ -112,11 +113,11 @@ class ConversationService {
             lastMessage: conv.lastMessage ? {
                 _id: conv.lastMessage._id,
                 content: conv.lastMessage.content,
-                sender: {
-                    _id: conv.lastMessage.sender._id,
-                    userName: conv.lastMessage.sender.userName,
-                    avatarUrl: conv.lastMessage.sender.avatarUrl
-                },
+                sender: conv.lastMessage.senderId ? {
+                    _id: conv.lastMessage.senderId._id,
+                    userName: conv.lastMessage.senderId.userName,
+                    avatarUrl: conv.lastMessage.senderId.avatarUrl
+                } : null,
                 createdAt: conv.lastMessage.createdAt
             } : null,
             seenBy: conv.seenBy ? conv.seenBy.map(user => ({
@@ -127,6 +128,29 @@ class ConversationService {
             updatedAt: conv.updatedAt,
             createdAt: conv.createdAt
         }))
+    }
+
+    static async getConversationMessages(conversationId, limit = 20, cursor) {
+        const query = { conversation: conversationId }
+        
+        if (cursor) {
+            query.createdAt = { $lt: new Date(cursor) }
+        }
+        let messages = await message.find(query)
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit) + 1)
+        let nextCursor = null
+
+        if (messages.length > limit) {
+            const  lastMessage = messages[messages.length - 1]
+            nextCursor = lastMessage.createdAt.toISOString()
+            messages.pop()
+        }
+        messages = messages.reverse()
+        return {
+            messages,
+            nextCursor
+        }
     }
 }
 

@@ -7,10 +7,10 @@ export const createConversation = async (req, res) => {
         statusCode: 201,
         metadata: await ConversationService.createConversation(req.body, userId)
     }).send(res)
-}   
+}
 
 export const getConversations = async (req, res) => {
-    
+
     new OK({
         message: "Get user conversations successfully",
         statusCode: 200,
@@ -20,10 +20,12 @@ export const getConversations = async (req, res) => {
 
 export const getConversationMessages = async (req, res) => {
     const { conversationId } = req.params
+    const { limit = 20, cusor } = req.query
+    
     new OK({
         message: "Get conversation messages successfully",
         statusCode: 200,
-        metadata: await ConversationService.getConversationMessages(conversationId)
+        metadata: await ConversationService.getConversationMessages(conversationId, limit, cusor)
     }).send(res)
 }
 

@@ -25,7 +25,7 @@ class messageService {
             })
         }
         const message = await Message.create({
-            conversationId: conversation._id,
+            conversation: conversation._id,
             senderId,
             content
         })
@@ -38,8 +38,19 @@ class messageService {
         }
     }
 
-    static async sendGroupMessage(payload) {
-        
+    static async sendGroupMessage(senderId, conversationId, content) {
+
+        if (!content) throw new BadGatewayError("Content is required")
+        const message = await Message.create({
+            conversation: conversationId,
+            senderId,
+            content
+        })
+        updateConverStationAfteCreateMessage(conversationId, message, senderId)
+        await Conversation.save()
+        return {
+            message
+        }
     }
 
 }
