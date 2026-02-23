@@ -24,7 +24,5 @@ export const sendGroupMessage = async (req, res) => {
         metadata: await messageService.sendGroupMessage(senderId, conversation._id, content)
     }).send(res)
 
-
-
 }
 

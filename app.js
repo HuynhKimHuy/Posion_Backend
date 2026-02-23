@@ -21,7 +21,13 @@ app.use(compression())
 app.use(express.json())
 app.use(
   cors({
-    origin: process.env.URL_CLIENT,
+    origin: [
+      process.env.URL_CLIENT,
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174"
+    ],
     credentials: true
   })
 );
