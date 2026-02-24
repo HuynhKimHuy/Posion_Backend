@@ -10,11 +10,15 @@ export const createConversation = async (req, res) => {
 }
 
 export const getConversations = async (req, res) => {
-
+    const conversations = await ConversationService.getUserConversations(req.user._id);
+    
     new OK({
         message: "Get user conversations successfully",
         statusCode: 200,
-        metadata: await ConversationService.getUserConversations(req.user._id)
+        metadata: {
+            conversations,
+            total: conversations.length
+        }
     }).send(res)
 }
 
