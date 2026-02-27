@@ -41,13 +41,11 @@ class AccessController {
   }
 
   static refreshToken = async(req,res,next)=>{
-    const { refreshToken } = req.cookies || {};
-    const token = refreshToken || req.body?.refreshToken;
-    const metadata = await AccessService.refreshToken({ token });
+    const token = req.cookies?.refreshToken 
     new OK({
-      message:"ok",
-      statusCode:200,
-      metadata
+      message:"updatate access token success",
+      statusCode:201,
+      metadata :  await AccessService.refreshToken({ token })
     }).send(res)
   }
 }

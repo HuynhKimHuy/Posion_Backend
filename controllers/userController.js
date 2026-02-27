@@ -1,6 +1,6 @@
 import { OK } from "../core/Success.js"
 
-export const UserController = async (req,res,)=>{
+export const UserController = async (req,res)=>{
     new OK({
         message:"OK",
         statusCode:200,

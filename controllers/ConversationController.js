@@ -24,12 +24,12 @@ export const getConversations = async (req, res) => {
 
 export const getConversationMessages = async (req, res) => {
     const { conversationId } = req.params
-    const { limit = 20, cusor } = req.query
+    const { limit = 20, cursor } = req.query
     
     new OK({
         message: "Get conversation messages successfully",
         statusCode: 200,
-        metadata: await ConversationService.getConversationMessages(conversationId, limit, cusor)
+        metadata: await ConversationService.getConversationMessages(conversationId, limit, cursor)
     }).send(res)
 }
 

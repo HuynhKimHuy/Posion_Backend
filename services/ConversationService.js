@@ -147,7 +147,7 @@ class ConversationService {
         }
         let messages = await message.find(query)
             .sort({ createdAt: -1 })
-            .limit(parseInt(limit) + 1)
+            .limit(parseInt(limit) + 1).lean()
         let nextCursor = null
 
         if (messages.length > limit) {
@@ -155,6 +155,7 @@ class ConversationService {
             nextCursor = lastMessage.createdAt.toISOString()
             messages.pop()
         }
+        
         messages = messages.reverse()
         return {
             messages,
