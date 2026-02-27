@@ -34,11 +34,13 @@ const SessionSchema = new Schema(
     expiresAt: {
       type: Date,
       required: true,
-      expires: 0,
     },
   },
   { timestamps: true, collection: COLLECTION_NAME }
 );
+
+// TTL Index - Tự động xóa document khi expiresAt đến
+SessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const Session = mongoose.model(DOCUMENT_NAME, SessionSchema);
 

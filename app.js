@@ -1,5 +1,7 @@
-import express from "express"
 import { config } from "dotenv";
+config();
+
+import express from "express"
 import helmet from "helmet"
 import morgan from "morgan";
 import Database from "./config/config.db.js";
@@ -10,7 +12,6 @@ import compression from "compression";
 import cors from 'cors'
 import swaggerUi from "swagger-ui-express";
 import fs from "fs";
-config();
 
 Database.getInstance()
 const app = express()

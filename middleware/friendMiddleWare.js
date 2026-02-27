@@ -6,37 +6,32 @@ const pair = (a, b) => {
 }
 
 export const checkFriendship = async (req, res, next) => {
-    const { recipientId } = req.body// Lấy userId từ req.user;
-    const userId = req.user._id.toString()
-    const memberIds = req.body?.memberId || []
+    try {
+        const userId = req.user._id.toString()
+        const { memberId } = req.body
 
-
-    if (recipientId) {
-        const [userA, userB] = pair(userId, recipientId)
-        const friendship = await Friend.findOne({
-            userA,
-            userB,
-        })
-        if (!friendship && memberIds.length === 0) {
-            throw new Error("You are not friends with this user.")
+        if (!memberId || !Array.isArray(memberId)) {
+            throw new Error("memberId must be an array");
         }
-        return next()
-    }
 
-    const friendships = memberIds.map(async id => {
-        const [userA, userB] = pair(userId, id)
-        const friend = await Friend.findOne({
-            userA,
-            userB,
+        // Check friendship with all members
+        const friendships = memberId.map(async id => {
+            const [userA, userB] = pair(userId, id.toString())
+            const friend = await Friend.findOne({
+                userA,
+                userB,
+            })
+            return friend ? null : id
         })
-        return friend ? null : memberIds
-    })
 
-    const results = await Promise.all(friendships)
-    const notFriend = results.filter(Boolean)
-    if (notFriend.length > 0) {
-        throw new Error(`You are not friends with users: ${notFriend.join(", ")}`)
+        const results = await Promise.all(friendships)
+        const notFriend = results.filter(Boolean)
+        if (notFriend.length > 0) {
+            throw new Error(`You are not friends with users: ${notFriend.join(", ")}`)
+        }
+        next()
+    } catch (error) {
+        next(error)
     }
-    next()
+}
 
-}  

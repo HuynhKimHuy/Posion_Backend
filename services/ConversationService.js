@@ -30,8 +30,10 @@ class ConversationService {
 
             conversation = new Conversation({
                 type: "group",
-                name,
-                createdBy: currentUserId,
+                group: {
+                    name: name,
+                    createdBy: currentUserId
+                },
                 participants: uniqueMembers.map(id => ({
                     userId: id,
                     role: id === String(currentUserId) ? "admin" : "member",
@@ -81,17 +83,17 @@ class ConversationService {
             .sort({ updatedAt: -1 })
             .populate({
                 path: "participants.userId",
-                select: "userName email avatarUrl",
+                select: "userName email avatarUrl firstName lastName",
                 options: { lean: true }
             })
             .populate({
                 path: "lastMessage.senderId",
-                select: "userName email avatarUrl",
+                select: "userName email avatarUrl firstName lastName",
                 options: { lean: true }
             })
             .populate({
                 path: "seenBy",
-                select: "userName email avatarUrl",
+                select: "userName email avatarUrl firstName lastName",
                 options: { lean: true }
             })
             .lean()
@@ -100,11 +102,15 @@ class ConversationService {
         return conversations.map(conv => ({
             _id: conv._id,
             type: conv.type,
-            name: conv.name || null,
-            createdBy: conv.createdBy,
+            name: conv.type === "group" ? conv.group?.name : null,
+            group: conv.group ? {
+                name: conv.group.name,
+                createdBy: conv.group.createdBy
+            } : null,
             participants: conv.participants.map(p => ({
                 userId: p.userId._id,
                 userName: p.userId.userName,
+                displayName: `${p.userId.firstName || ""} ${p.userId.lastName || ""}`.trim() || p.userId.userName,
                 email: p.userId.email,
                 avatarUrl: p.userId.avatarUrl,
                 role: p.role,
@@ -116,6 +122,7 @@ class ConversationService {
                 sender: conv.lastMessage.senderId ? {
                     _id: conv.lastMessage.senderId._id,
                     userName: conv.lastMessage.senderId.userName,
+                    displayName: `${conv.lastMessage.senderId.firstName || ""} ${conv.lastMessage.senderId.lastName || ""}`.trim() || conv.lastMessage.senderId.userName,
                     avatarUrl: conv.lastMessage.senderId.avatarUrl
                 } : null,
                 createdAt: conv.lastMessage.createdAt
@@ -123,6 +130,7 @@ class ConversationService {
             seenBy: conv.seenBy ? conv.seenBy.map(user => ({
                 _id: user._id,
                 userName: user.userName,
+                displayName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.userName,
                 avatarUrl: user.avatarUrl
             })) : [],
             updatedAt: conv.updatedAt,
@@ -130,9 +138,10 @@ class ConversationService {
         }))
     }
 
+
     static async getConversationMessages(conversationId, limit = 20, cursor) {
         const query = { conversation: conversationId }
-        
+
         if (cursor) {
             query.createdAt = { $lt: new Date(cursor) }
         }
@@ -142,7 +151,7 @@ class ConversationService {
         let nextCursor = null
 
         if (messages.length > limit) {
-            const  lastMessage = messages[messages.length - 1]
+            const lastMessage = messages[messages.length - 1]
             nextCursor = lastMessage.createdAt.toISOString()
             messages.pop()
         }

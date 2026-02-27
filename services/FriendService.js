@@ -49,7 +49,7 @@ class FriendService {
       userA: request.from,
       userB: request.to,
     })
-
+    
     await FriendRequestModel.findByIdAndDelete(requestId)
 
     const from = await User.findById(request.from).select(" _id userName avatarUrl").lean()

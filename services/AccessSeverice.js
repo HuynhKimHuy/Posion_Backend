@@ -9,6 +9,13 @@ import Session from "../models/Session.js";
 const ACCESS_TOKEN_TTL = "30m";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000;
 
+const getAccessTokenSecret = () => {
+  const secret = process.env.ACCESS_TOKEN_SECRET;
+  if (!secret) {
+    throw new Error("ACCESS_TOKEN_SECRET is not set");
+  }
+  return secret;
+};
 class AccessService {
   static signup = async (payload = {}) => {
     const { email, password, userName, firstName, lastName } = payload;
@@ -43,7 +50,7 @@ class AccessService {
     const matchPassword = await bcrypt.compare(password, user.passwordHash);
     if (!matchPassword) throw new AuthFailureError("Invalid credentials");
 
-    const accessToken = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET, {
+    const accessToken = jwt.sign({ userId: user._id }, getAccessTokenSecret(), {
       expiresIn: ACCESS_TOKEN_TTL,
     });
 
@@ -96,7 +103,7 @@ class AccessService {
     const user = await User.findById(session.user);
     if (!user) throw new AuthFailureError("User not found");
 
-    const accessToken = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET, {
+    const accessToken = jwt.sign({ userId: user._id }, getAccessTokenSecret(), {
       expiresIn: ACCESS_TOKEN_TTL,
     });
 
