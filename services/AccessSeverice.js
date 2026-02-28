@@ -96,7 +96,7 @@ class AccessService {
     const session = await Session.findOne({ refreshToken: token, isValid: true });
 
     if (!session) throw new AuthFailureError("Invalid refresh token");
-    
+
     if (session.expiresAt && session.expiresAt.getTime() < Date.now()) {
       await Session.deleteOne({ _id: session._id });
       throw new AuthFailureError("Refresh token expired");
@@ -116,6 +116,12 @@ class AccessService {
         accessToken
       },
     };
+  }
+  static fetchUserInfo = async (payload = {} ) => {
+    const  {userId}  = payload;
+    if (!userId) throw new BadRequestError("Missing userId");
+
+    return await User.findById(userId).select("-passwordHash").lean();
   }
 }
 

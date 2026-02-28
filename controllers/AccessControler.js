@@ -47,6 +47,15 @@ class AccessController {
       statusCode:201,
       metadata :  await AccessService.refreshToken({ token })
     }).send(res)
+    
+  }
+  static fetchUserInfo = async(req,res,next)=>{
+    const userId = req.user._id
+    new OK({
+      message:"fetch user info success",
+      statusCode:200,
+      metadata :  await AccessService.fetchUserInfo({ userId })
+    }).send(res)
   }
 }
 export default AccessController
