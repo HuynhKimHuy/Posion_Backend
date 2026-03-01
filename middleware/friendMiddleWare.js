@@ -8,14 +8,20 @@ const pair = (a, b) => {
 export const checkFriendship = async (req, res, next) => {
     try {
         const userId = req.user._id.toString()
-        const { memberId } = req.body
+        const { memberId, recipientId } = req.body
 
-        if (!memberId || !Array.isArray(memberId)) {
-            throw new Error("memberId must be an array");
+        const memberIds = Array.isArray(memberId)
+            ? memberId
+            : recipientId
+                ? [recipientId]
+                : []
+
+        if (memberIds.length < 1) {
+            throw new Error("memberId must be an array or recipientId is required");
         }
 
         // Check friendship with all members
-        const friendships = memberId.map(async id => {
+        const friendships = memberIds.map(async id => {
             const [userA, userB] = pair(userId, id.toString())
             const friend = await Friend.findOne({
                 userA,

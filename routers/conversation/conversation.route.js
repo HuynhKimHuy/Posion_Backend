@@ -6,6 +6,7 @@ import { createConversation, getConversations, getConversationMessages } from '.
 const ConversationRouter = express.Router()
 ConversationRouter.post("/", checkFriendship, asyncHandler(createConversation))
 ConversationRouter.get("/", asyncHandler(getConversations))
-ConversationRouter.get("/:conversationId/message", asyncHandler(getConversationMessages))
+ConversationRouter.get("/:conversationId/messages", asyncHandler(getConversationMessages))
+
 
 export default ConversationRouter
