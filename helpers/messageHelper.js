@@ -22,4 +22,13 @@ const updateConverStationAfteCreateMessage = (conversation, message, senderId) =
         conversation.unreadCounts.set(memberId, isSender ? 0 : prevCount + 1)
     })
 }
+
+export const emitNewMessage = (conversationId, message, senderId) => {
+    const io = global.io
+    if (!io) {
+        console.error("Socket.io instance not found")
+        return
+    }
+    io.to(conversationId).emit("new-message", { conversationId, message, senderId })
+}
 export default updateConverStationAfteCreateMessage

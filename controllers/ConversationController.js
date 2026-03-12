@@ -1,4 +1,4 @@
-import ConversationService from "../services/ConversationService.js"
+import ConversationService from "../services/conversationService.js"
 import { OK } from "../core/Success.js"
 export const createConversation = async (req, res) => {
     const userId = req.user._id
@@ -33,3 +33,7 @@ export const getConversationMessages = async (req, res) => {
     }).send(res)
 }
 
+export const getUserConversationsForSocket = async (userId) => {
+    const conversations = await ConversationService.getUserConversationsForSocket(userId);
+    return conversations;
+}

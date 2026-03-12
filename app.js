@@ -12,11 +12,13 @@ import compression from "compression";
 import cors from 'cors'
 import swaggerUi from "swagger-ui-express";
 import fs from "fs";
+import  {app , server} from "./socket/index.js"
 
 Database.getInstance()
-const app = express()
+
 app.use(cookieParser());
 
+app.use(helmet())
 app.use(morgan("dev"));
 app.use(compression())
 app.use(express.json())
@@ -55,7 +57,7 @@ app.use((error, req,res,next)=>{
     })
 })
 
-app.listen(process.env.PORT,()=>{
+server.listen(process.env.PORT,()=>{
       console.log(`React Lofi runing on PORT ${process.env.PORT}`)
 })
 

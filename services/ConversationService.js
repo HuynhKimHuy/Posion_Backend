@@ -162,6 +162,12 @@ class ConversationService {
             nextCursor
         }
     }
+
+    static async getUserConversationsForSocket(userId) {
+        return Conversation.find({
+            "participants.userId": userId
+        }).select("_id").lean().then(conversations => conversations.map(c => c._id.toString()))
+    }
 }
 
 export default ConversationService
