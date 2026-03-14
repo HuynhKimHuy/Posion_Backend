@@ -1,4 +1,4 @@
-import ConversationService from "../services/conversationService.js"
+import ConversationService from "../services/ConversationService.js"
 import { OK } from "../core/Success.js"
 export const createConversation = async (req, res) => {
     const userId = req.user._id

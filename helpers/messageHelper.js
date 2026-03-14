@@ -1,3 +1,4 @@
+
 const updateConverStationAfteCreateMessage = (conversation, message, senderId) => {
     conversation.set({
         seenBy: [],
@@ -23,12 +24,38 @@ const updateConverStationAfteCreateMessage = (conversation, message, senderId) =
     })
 }
 
-export const emitNewMessage = (conversationId, message, senderId) => {
-    const io = global.io
-    if (!io) {
-        console.error("Socket.io instance not found")
-        return
+export const emitNewMessage = (io, conversation, message) => {
+    if (!io || !conversation?._id || !message?._id) return
+
+    const conversationId = conversation._id.toString()
+    const unreadCounts = conversation.unreadCounts || {}
+
+    const payload = {
+        message,
+        conversation: {
+            _id: conversation._id,
+            type: conversation.type,
+            name: conversation.name,
+            group: conversation.group,
+            participants: conversation.participants,
+            lastMessage: conversation.lastMessage,
+            lastMessageAt: conversation.lastMessageAt,
+            seenBy: conversation.seenBy,
+            createdAt: conversation.createdAt,
+            updatedAt: conversation.updatedAt,
+            unreadCounts,
+        },
+        unreadCounts,
     }
-    io.to(conversationId).emit("new-message", { conversationId, message, senderId })
+
+    io.to(conversationId).emit("new-message", payload)
+
+    const participantIds = (conversation.participants || [])
+        .map((participant) => participant?.userId?.toString?.() || participant?.userId)
+        .filter(Boolean)
+
+    participantIds.forEach((userId) => {
+        io.to(`user:${userId}`).emit("new-message", payload)
+    })
 }
 export default updateConverStationAfteCreateMessage
