@@ -1,6 +1,47 @@
 import Conversation from "../models/Conversation.js"
 import message from "../models/message.js"
-import { BadRequestError } from "../core/AppError.js"
+import { BadRequestError, ForbiddenError, NotFoundError } from "../core/AppError.js"
+import { ensureUnreadCountsMap, normalizeUnreadCounts } from "../helpers/unreadCounts.js"
+
+const mapConversationPayload = (conv) => ({
+    _id: conv._id,
+    type: conv.type,
+    name: conv.type === "group" ? conv.group?.name : null,
+    group: conv.group ? {
+        name: conv.group.name,
+        createdBy: conv.group.createdBy
+    } : null,
+    participants: (conv.participants || []).map((p) => ({
+        userId: p.userId?._id || p.userId,
+        userName: p.userId?.userName,
+        displayName: `${p.userId?.firstName || ""} ${p.userId?.lastName || ""}`.trim() || p.userId?.userName,
+        email: p.userId?.email,
+        avatarUrl: p.userId?.avatarUrl,
+        role: p.role,
+        joinedAt: p.joinedAt
+    })),
+    lastMessage: conv.lastMessage ? {
+        _id: conv.lastMessage._id,
+        content: conv.lastMessage.content,
+        sender: conv.lastMessage.senderId ? {
+            _id: conv.lastMessage.senderId._id,
+            userName: conv.lastMessage.senderId.userName,
+            displayName: `${conv.lastMessage.senderId.firstName || ""} ${conv.lastMessage.senderId.lastName || ""}`.trim() || conv.lastMessage.senderId.userName,
+            avatarUrl: conv.lastMessage.senderId.avatarUrl
+        } : null,
+        createdAt: conv.lastMessage.createdAt
+    } : null,
+    seenBy: (conv.seenBy || []).map((user) => ({
+        _id: user._id,
+        userName: user.userName,
+        displayName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.userName,
+        avatarUrl: user.avatarUrl
+    })),
+    unreadCounts: normalizeUnreadCounts(conv.unreadCounts),
+    updatedAt: conv.updatedAt,
+    createdAt: conv.createdAt
+})
+
 class ConversationService {
     static async createConversation(payload, currentUserId) {
         const { type, name, memberId } = payload
@@ -98,44 +139,7 @@ class ConversationService {
             })
             .lean()
 
-        // Format dữ liệu trả về
-        return conversations.map(conv => ({
-            _id: conv._id,
-            type: conv.type,
-            name: conv.type === "group" ? conv.group?.name : null,
-            group: conv.group ? {
-                name: conv.group.name,
-                createdBy: conv.group.createdBy
-            } : null,
-            participants: conv.participants.map(p => ({
-                userId: p.userId._id,
-                userName: p.userId.userName,
-                displayName: `${p.userId.firstName || ""} ${p.userId.lastName || ""}`.trim() || p.userId.userName,
-                email: p.userId.email,
-                avatarUrl: p.userId.avatarUrl,
-                role: p.role,
-                joinedAt: p.joinedAt
-            })),
-            lastMessage: conv.lastMessage ? {
-                _id: conv.lastMessage._id,
-                content: conv.lastMessage.content,
-                sender: conv.lastMessage.senderId ? {
-                    _id: conv.lastMessage.senderId._id,
-                    userName: conv.lastMessage.senderId.userName,
-                    displayName: `${conv.lastMessage.senderId.firstName || ""} ${conv.lastMessage.senderId.lastName || ""}`.trim() || conv.lastMessage.senderId.userName,
-                    avatarUrl: conv.lastMessage.senderId.avatarUrl
-                } : null,
-                createdAt: conv.lastMessage.createdAt
-            } : null,
-            seenBy: conv.seenBy ? conv.seenBy.map(user => ({
-                _id: user._id,
-                userName: user.userName,
-                displayName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.userName,
-                avatarUrl: user.avatarUrl
-            })) : [],
-            updatedAt: conv.updatedAt,
-            createdAt: conv.createdAt
-        }))
+        return conversations.map(mapConversationPayload)
     }
 
 
@@ -167,6 +171,62 @@ class ConversationService {
         return Conversation.find({
             "participants.userId": userId
         }).select("_id").lean().then(conversations => conversations.map(c => c._id.toString()))
+    }
+
+    static async markConversationAsRead(conversationId, userId) {
+        const userIdString = String(userId)
+
+        const conversation = await Conversation.findById(conversationId)
+        if (!conversation) {
+            throw new NotFoundError("Conversation not found")
+        }
+
+        const isParticipant = (conversation.participants || []).some(
+            (participant) => String(participant.userId) === userIdString
+        )
+
+        if (!isParticipant) {
+            throw new ForbiddenError("You are not a participant of this conversation")
+        }
+
+        const unreadCounts = ensureUnreadCountsMap(conversation)
+        unreadCounts.set(userIdString, 0)
+
+        const seenBySet = new Set((conversation.seenBy || []).map((id) => id.toString()))
+        seenBySet.add(userIdString)
+        conversation.seenBy = Array.from(seenBySet)
+
+        await conversation.save()
+
+        const hydratedConversation = await Conversation.findById(conversationId)
+            .populate({
+                path: "participants.userId",
+                select: "userName email avatarUrl firstName lastName",
+                options: { lean: true }
+            })
+            .populate({
+                path: "lastMessage.senderId",
+                select: "userName email avatarUrl firstName lastName",
+                options: { lean: true }
+            })
+            .populate({
+                path: "seenBy",
+                select: "userName email avatarUrl firstName lastName",
+                options: { lean: true }
+            })
+            .lean()
+
+        const payload = mapConversationPayload(hydratedConversation)
+
+        if (global.io) {
+            global.io.to(String(conversationId)).emit("conversation-read", {
+                conversation: payload,
+                unreadCounts: payload.unreadCounts,
+                readBy: userIdString,
+            })
+        }
+
+        return payload
     }
 }
 

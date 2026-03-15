@@ -6,7 +6,9 @@ import {
     accepFriendRequest,
     declineFriendRequest,
     getAllFriends,
-    getAllFriendRequest
+    getAllFriendRequest,
+    searchFriends
+
 } from "../../controllers/FriendController.js";
 
 const FriendRouter = express.Router();
@@ -14,6 +16,7 @@ const FriendRouter = express.Router();
 FriendRouter.post("/requests", asyncHandler(sendFriendRequest));
 FriendRouter.post("/requests/:requestId/accept", asyncHandler(accepFriendRequest));
 FriendRouter.post("/requests/:requestId/decline", asyncHandler(declineFriendRequest));
+FriendRouter.get("/search", asyncHandler(searchFriends));
 FriendRouter.get("/", asyncHandler(getAllFriends));
 FriendRouter.get("/requests", asyncHandler(getAllFriendRequest));
 export default FriendRouter;

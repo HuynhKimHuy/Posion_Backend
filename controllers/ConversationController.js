@@ -33,6 +33,16 @@ export const getConversationMessages = async (req, res) => {
     }).send(res)
 }
 
+export const markConversationAsRead = async (req, res) => {
+    const { conversationId } = req.params
+
+    new OK({
+        message: "Marked conversation as read successfully",
+        statusCode: 200,
+        metadata: await ConversationService.markConversationAsRead(conversationId, req.user._id)
+    }).send(res)
+}
+
 export const getUserConversationsForSocket = async (userId) => {
     const conversations = await ConversationService.getUserConversationsForSocket(userId);
     return conversations;

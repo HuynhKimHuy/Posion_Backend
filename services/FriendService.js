@@ -99,7 +99,22 @@ class FriendService {
 
     return { sent, received };
   };
+
+  // findFrined By usernName or displayName
+  static searchFriends = async(userName)=>{
+    if(!userName || userName.trim()=== "") return []
+    const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")
+    const q = userName.trim()
+    const re = new RegExp(escapeRegex(q), "i")
+    return await User.find({
+      $or: [
+        { userName: { $regex: re } },
+        { displayName: { $regex: re } }
+      ]
+    }).select("_id userName avatarUrl").limit(20).lean()
+  }
 }
+
 
 
 export default FriendService;

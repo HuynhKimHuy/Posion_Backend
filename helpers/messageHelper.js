@@ -1,3 +1,4 @@
+import { ensureUnreadCountsMap, normalizeUnreadCounts } from "./unreadCounts.js"
 
 const updateConverStationAfteCreateMessage = (conversation, message, senderId) => {
     conversation.set({
@@ -12,15 +13,15 @@ const updateConverStationAfteCreateMessage = (conversation, message, senderId) =
     })
 
     const senderIdString = senderId?.toString()
-    if (!conversation.unreadCounts) conversation.unreadCounts = new Map()
+    const unreadCounts = ensureUnreadCountsMap(conversation)
 
     conversation.participants.forEach((participant) => {
         const memberId = participant?.userId?.toString?.() || participant?.toString?.()
         if (!memberId) return
 
         const isSender = memberId === senderIdString
-        const prevCount = conversation.unreadCounts.get(memberId) || 0
-        conversation.unreadCounts.set(memberId, isSender ? 0 : prevCount + 1)
+        const prevCount = unreadCounts.get(memberId) || 0
+        unreadCounts.set(memberId, isSender ? 0 : prevCount + 1)
     })
 }
 
@@ -28,7 +29,7 @@ export const emitNewMessage = (io, conversation, message) => {
     if (!io || !conversation?._id || !message?._id) return
 
     const conversationId = conversation._id.toString()
-    const unreadCounts = conversation.unreadCounts || {}
+    const unreadCounts = normalizeUnreadCounts(conversation.unreadCounts)
 
     const payload = {
         message,

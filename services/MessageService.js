@@ -3,13 +3,7 @@ import Message from "../models/message.js";
 
 import Conversation from "../models/Conversation.js";
 import updateConverStationAfteCreateMessage, { emitNewMessage } from "../helpers/messageHelper.js";
-
-const normalizeUnreadCounts = (value) => {
-    if (!value) return {}
-    if (value instanceof Map) return Object.fromEntries(value.entries())
-    if (typeof value.toJSON === "function") return value.toJSON()
-    return { ...value }
-}
+import { normalizeUnreadCounts } from "../helpers/unreadCounts.js";
 
 const toRealtimeConversationPayload = async (conversationId) => {
     const conv = await Conversation.findById(conversationId)
