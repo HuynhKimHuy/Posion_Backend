@@ -61,10 +61,11 @@ export const getAllFriendRequest = async (req, res) => {
 };
 
 export const searchFriends = async(req,res)=>{
-    const userName = req.query
+    const userName = req.query?.username
+    const userId = req.user?._id
      new OK({
         message: "search friends completed",
         statusCode: 200,
-        metadata: await FriendService.searchFriends(userName)
+        metadata: await FriendService.searchFriends({ userName, userId })
     }).send(res)
 }

@@ -14,6 +14,7 @@ import {
 const FriendRouter = express.Router();
 
 FriendRouter.post("/requests", asyncHandler(sendFriendRequest));
+FriendRouter.post("/request", asyncHandler(sendFriendRequest));
 FriendRouter.post("/requests/:requestId/accept", asyncHandler(accepFriendRequest));
 FriendRouter.post("/requests/:requestId/decline", asyncHandler(declineFriendRequest));
 FriendRouter.get("/search", asyncHandler(searchFriends));

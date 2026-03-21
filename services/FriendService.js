@@ -90,28 +90,34 @@ class FriendService {
 
   // backend/services/FriendService.js
   static getAllFriendRequest = async (userId) => {
-    const populateFields = "_id username displayName avatarUrl";
+    const populateFields = "_id userName avatarUrl";
 
     const [sent, received] = await Promise.all([
-      FriendRequest.find({ from: userId }).populate("to", populateFields).lean(),
-      FriendRequest.find({ to: userId }).populate("from", populateFields).lean(),
+      FriendRequestModel.find({ from: userId }).populate("to", populateFields).lean(),
+      FriendRequestModel.find({ to: userId }).populate("from", populateFields).lean(),
     ]);
 
     return { sent, received };
   };
 
   // findFrined By usernName or displayName
-  static searchFriends = async(userName)=>{
+  static searchFriends = async({ userName, userId })=>{
     if(!userName || userName.trim()=== "") return []
     const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")
     const q = userName.trim()
     const re = new RegExp(escapeRegex(q), "i")
-    return await User.find({
+    const filter = {
       $or: [
         { userName: { $regex: re } },
         { displayName: { $regex: re } }
       ]
-    }).select("_id userName avatarUrl").limit(20).lean()
+    }
+
+    if (userId) {
+      filter._id = { $ne: userId }
+    }
+
+    return await User.find(filter).select("_id userName avatarUrl").limit(20).lean()
   }
 }
 

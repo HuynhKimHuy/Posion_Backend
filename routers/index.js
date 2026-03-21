@@ -11,6 +11,7 @@ router.use('/api/auth', AccessRouter)
 router.use(requireAccessToken) //protect APi user
 router.use('/api/user', UserRouter)
 router.use('/api/friend', FriendRouter)
+router.use('/api/friends', FriendRouter)
 router.use('/api/message', MessageRouter)
 router.use('/api/conversation',ConversationRouter)
 export default router
