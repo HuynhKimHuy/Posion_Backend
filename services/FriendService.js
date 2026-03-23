@@ -35,6 +35,18 @@ class FriendService {
       message: message,
     });
 
+    // Notify both sides to refresh friend request lists in real time.
+    if (global.io) {
+      global.io.to(`user:${to}`).emit("friend-request:new", {
+        requestId: request._id,
+        from: from.toString(),
+        to: to.toString(),
+      });
+      global.io.to(`user:${from}`).emit("friend-request:changed", {
+        requestId: request._id,
+      });
+    }
+
     return request;
   };
 
@@ -49,6 +61,15 @@ class FriendService {
       userA: request.from,
       userB: request.to,
     })
+
+    if (global.io) {
+      global.io.to(`user:${request.to.toString()}`).emit("friend-request:changed", {
+        requestId,
+      });
+      global.io.to(`user:${request.from.toString()}`).emit("friend-request:changed", {
+        requestId,
+      });
+    }
     
     await FriendRequestModel.findByIdAndDelete(requestId)
 
@@ -69,6 +90,16 @@ class FriendService {
     if (!request) throw new BadRequestError("Cannot find Request add friend")
 
     if (request.to.toString() != userId) throw new Error("Không có quyền từ chối lời mời kết bạn ");
+
+    if (global.io) {
+      global.io.to(`user:${request.to.toString()}`).emit("friend-request:changed", {
+        requestId,
+      });
+      global.io.to(`user:${request.from.toString()}`).emit("friend-request:changed", {
+        requestId,
+      });
+    }
+
     await FriendRequestModel.findByIdAndDelete(requestId)
   };
 

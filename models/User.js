@@ -39,6 +39,11 @@ const userSchema = new mongoose.Schema(
     avatarUrl: {
       type: String
     },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+    },
     verfify: {
       type: Schema.Types.Boolean,
       default: false,

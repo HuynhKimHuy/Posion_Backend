@@ -117,12 +117,6 @@ class AccessService {
       },
     };
   }
-  static fetchUserInfo = async (payload = {} ) => {
-    const  {userId}  = payload;
-    if (!userId) throw new BadRequestError("Missing userId");
-
-    return await User.findById(userId).select("-passwordHash").lean();
-  }
 }
 
 export default AccessService;
