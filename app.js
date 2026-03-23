@@ -13,8 +13,14 @@ import cors from 'cors'
 import swaggerUi from "swagger-ui-express";
 import fs from "fs";
 import  {app , server} from "./socket/index.js"
-
+import cloudinary from "cloudinary"
 Database.getInstance()
+
+cloudinary.config({ 
+    cloud_name: process.env.CLOUD_NAME || "dqjv4645s", 
+    api_key: process.env.APIKEY || "368194946159373", 
+    api_secret: process.env.APISECRET 
+});
 
 app.use(cookieParser());
 
@@ -40,7 +46,6 @@ const swaggerDocument = JSON.parse(fs.readFileSync("./swagger.json", "utf-8"));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/',router)
 
-
 app.use((req,res,next)=>{
       const error = new Error('Not Found')
       error.status = 404
@@ -49,12 +54,16 @@ app.use((req,res,next)=>{
 })
 
 app.use((error, req,res,next)=>{
-    const statusCode = error.status || 500
-    return res.status(statusCode).json({
-        status:'error',
-        code: statusCode,
-        message:error.message ||"Internal sever Error"
-    })
+  const isFileTooLarge = error && error.code === "LIMIT_FILE_SIZE";
+  const statusCode = isFileTooLarge ? 400 : error.status || 500;
+  const message = isFileTooLarge
+    ? "File upload too large (max 5MB)"
+    : error.message || "Internal sever Error";
+  return res.status(statusCode).json({
+    status:'error',
+    code: statusCode,
+    message
+  })
 })
 
 server.listen(process.env.PORT,()=>{

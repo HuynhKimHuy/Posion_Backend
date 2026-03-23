@@ -43,9 +43,15 @@ class AccessService {
   };
 
   static signin = async (payload = {}) => {
-    const { email, password } = payload;
-    const user = await FindByEmail(email);
-    if (!user) throw new BadRequestError("Forbiden Eror");
+    const normalizedEmail = String(payload.email || "").trim().toLowerCase();
+    const password = String(payload.password || "");
+
+    if (!normalizedEmail || !password) {
+      throw new AuthFailureError("Invalid credentials");
+    }
+
+    const user = await FindByEmail(normalizedEmail);
+    if (!user?.passwordHash) throw new AuthFailureError("Invalid credentials");
 
     const matchPassword = await bcrypt.compare(password, user.passwordHash);
     if (!matchPassword) throw new AuthFailureError("Invalid credentials");

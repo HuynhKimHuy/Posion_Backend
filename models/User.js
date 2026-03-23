@@ -39,6 +39,9 @@ const userSchema = new mongoose.Schema(
     avatarUrl: {
       type: String
     },
+    coverUrl: {
+      type: String
+    },
     bio: {
       type: String,
       trim: true,
