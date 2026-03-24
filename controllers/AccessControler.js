@@ -3,13 +3,29 @@ import AccessService from '../services/AccessSeverice.js';
 
 const REFRESH_COOKIE_MAX_AGE = 14 * 24 * 60 * 60 * 1000;
 
-const getRefreshCookieOptions = () => ({
-  httpOnly: true,
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  secure: process.env.NODE_ENV === 'production',
-  maxAge: REFRESH_COOKIE_MAX_AGE,
-  path: '/',
-});
+const isLocalRequest = (req) => {
+  const origin = String(req.headers?.origin || '').toLowerCase();
+  const host = String(req.headers?.host || '').toLowerCase();
+  return (
+    origin.includes('localhost') ||
+    origin.includes('127.0.0.1') ||
+    host.includes('localhost') ||
+    host.includes('127.0.0.1')
+  );
+};
+
+const getRefreshCookieOptions = (req) => {
+  const isLocal = isLocalRequest(req);
+  return {
+    httpOnly: true,
+    sameSite: isLocal ? 'lax' : 'none',
+    secure: !isLocal,
+    maxAge: REFRESH_COOKIE_MAX_AGE,
+    path: '/',
+    // Hỗ trợ trình duyệt mới với cross-site cookie bị siết chặt
+    partitioned: !isLocal,
+  };
+};
 
 class AccessController {
 
@@ -25,7 +41,7 @@ class AccessController {
     const metadata = await AccessService.signin(req.body)
     const refreshToken = metadata?.tokens?.refreshToken
     if (refreshToken) {
-      res.cookie("refreshToken", refreshToken, getRefreshCookieOptions());
+      res.cookie("refreshToken", refreshToken, getRefreshCookieOptions(req));
     }
     new OK({
       message: "ok",
@@ -38,7 +54,7 @@ class AccessController {
     const { refreshToken } = req.cookies || {};
     const token = refreshToken || req.body?.refreshToken;
     await AccessService.logout({ token });
-    res.clearCookie("refreshToken", getRefreshCookieOptions());
+    res.clearCookie("refreshToken", getRefreshCookieOptions(req));
     new OK({
       message: "ok",
       statusCode: 200,
