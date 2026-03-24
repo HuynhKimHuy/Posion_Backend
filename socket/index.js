@@ -4,11 +4,38 @@ import http from "http"
 import express from "express"
 import ConversationService from "../services/ConversationService.js"
 
+const parseOrigins = (...values) => {
+    const candidates = values
+        .filter(Boolean)
+        .flatMap((value) => String(value).split(","))
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+
+    return [...new Set(candidates)]
+}
+
+const allowedOrigins = parseOrigins(
+    process.env.URL_CLIENT,
+    process.env.URL_CLIENTS,
+    "https://posionfrontend.huynhkimhuy69.workers.dev",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174"
+)
+
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
     cors: {
-        origin: process.env.URL_CLIENT || "http://localhost:5173",
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true)
+                return
+            }
+
+            callback(new Error(`Origin ${origin} not allowed by CORS`))
+        },
         credentials: true
     }
 })
