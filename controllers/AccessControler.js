@@ -15,45 +15,45 @@ class AccessController {
 
   static signup = async (req, res, next) => {
     new OK({
-      message:"ok",
-      statusCode:200,
+      message: "ok",
+      statusCode: 200,
       metadata: await AccessService.signup(req.body)
     }).send(res)
   };
-  
-  static signin = async(req,res,next)=>{
+
+  static signin = async (req, res, next) => {
     const metadata = await AccessService.signin(req.body)
     const refreshToken = metadata?.tokens?.refreshToken
     if (refreshToken) {
       res.cookie("refreshToken", refreshToken, getRefreshCookieOptions());
     }
     new OK({
-      message:"ok",
-      statusCode:200,
+      message: "ok",
+      statusCode: 200,
       metadata
     }).send(res)
   }
 
-  static logout = async(req,res,next)=>{
+  static logout = async (req, res, next) => {
     const { refreshToken } = req.cookies || {};
     const token = refreshToken || req.body?.refreshToken;
     await AccessService.logout({ token });
     res.clearCookie("refreshToken", getRefreshCookieOptions());
     new OK({
-      message:"ok",
-      statusCode:200,
+      message: "ok",
+      statusCode: 200,
       metadata: {}
     }).send(res)
   }
 
-  static refreshToken = async(req,res,next)=>{
-    const token = req.cookies?.refreshToken 
+  static refreshToken = async (req, res, next) => {
+    const token = req.cookies?.refreshToken || req.body?.refreshToken
     new OK({
-      message:"updatate access token success",
-      statusCode:201,
-      metadata :  await AccessService.refreshToken({ token })
+      message: "updatate access token success",
+      statusCode: 201,
+      metadata: await AccessService.refreshToken({ token })
     }).send(res)
-    
+
   }
 }
 export default AccessController
